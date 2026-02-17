@@ -6,9 +6,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PolicyList from "./pages/Policy/PolicyList";
 import ClaimsList from "./pages/Claims/ClaimsList";
+import ClaimDetails from "./pages/Claims/ClaimDetails";
 import TreatyList from "./pages/Reinsurance/TreatyList";
+import AllocationsList from "./pages/Reinsurance/AllocationsList";
 import UserList from "./pages/Admin/UserList";
 import CreatePolicy from "./pages/Policy/CreatePolicy";
+import PolicyDetails from "./pages/Policy/PolicyDetails";
 
 function App() {
     return (
@@ -47,6 +50,17 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+
+            <Route
+                path="/policies/:id"
+                element={
+                    <ProtectedRoute>
+                        <Sidebar>
+                            <PolicyDetails />
+                        </Sidebar>
+                    </ProtectedRoute>
+                }
+            />
             
             <Route
                 path="/claims"
@@ -60,11 +74,33 @@ function App() {
             />
 
             <Route
+                path="/claims/:id"
+                element={
+                    <ProtectedRoute roles={["CLAIMS_ADJUSTER"]}>
+                        <Sidebar>
+                            <ClaimDetails />
+                        </Sidebar>
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
                 path="/treaties"
                 element={
                     <ProtectedRoute roles={["REINSURANCE_MANAGER"]}>
                         <Sidebar>
                             <TreatyList />
+                        </Sidebar>
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/allocations"
+                element={
+                    <ProtectedRoute roles={["REINSURANCE_MANAGER"]}>
+                        <Sidebar>
+                            <AllocationsList />
                         </Sidebar>
                     </ProtectedRoute>
                 }

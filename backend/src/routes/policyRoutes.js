@@ -10,18 +10,18 @@ router.get(
     getAllPolicies
 );
 
-// Only UNDERWRITER can create
+// UNDERWRITER or ADMIN can create
 router.post(
     "/",
     protect,
-    authorizeRoles("UNDERWRITER"),
+    authorizeRoles("UNDERWRITER", "ADMIN"),
     createPolicy
 );
 
 router.put(
     "/:id/submit",
     protect,
-    authorizeRoles("UNDERWRITER"),
+    authorizeRoles("UNDERWRITER", "ADMIN"),
     submitForApproval
 );
 
@@ -37,7 +37,6 @@ router.get("/:id", protect, getPolicy);
 router.get(
   "/:id/audit",
   protect,
-  authorizeRoles("ADMIN"),
   getPolicyAuditLogs
 );
 

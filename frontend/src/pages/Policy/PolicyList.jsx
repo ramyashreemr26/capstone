@@ -143,7 +143,10 @@ const PolicyList = () => {
                       Premium Amount
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>
-                      Effective Date
+                      From
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      Until
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
                   </TableRow>
@@ -151,7 +154,11 @@ const PolicyList = () => {
                 <TableBody>
                   {policies.map((p) => (
                     <TableRow key={p._id}>
-                      <TableCell>{p.policyNumber}</TableCell>
+                      <TableCell>
+                        <Button variant="text" onClick={() => navigate(`/policies/${p._id}`)}>
+                          {p.policyNumber}
+                        </Button>
+                      </TableCell>
                       <TableCell>{p.type || "N/A"}</TableCell>
                       <TableCell>
                         <Chip
@@ -160,10 +167,15 @@ const PolicyList = () => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>${(p.premiumAmount || 0).toLocaleString()}</TableCell>
+                      <TableCell>${(p.premium || 0).toLocaleString()}</TableCell>
                       <TableCell>
-                        {p.effectiveDate
-                          ? new Date(p.effectiveDate).toLocaleDateString()
+                        {p.effectiveFrom
+                          ? new Date(p.effectiveFrom).toLocaleDateString()
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {p.effectiveUntil
+                          ? new Date(p.effectiveUntil).toLocaleDateString()
                           : "N/A"}
                       </TableCell>
                       <TableCell>

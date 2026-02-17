@@ -45,6 +45,7 @@ const createClaim = async (req, res) => {
 
     await AuditLog.create({
       policyId: policy._id,
+      claimId: claim._id,
       action: "CLAIM_CREATED",
       performedBy: req.user._id,
     });
@@ -69,6 +70,13 @@ const reviewClaim = async (req, res) => {
     claim.reviewedBy = req.user._id;
     await claim.save();
 
+    await AuditLog.create({
+      policyId: claim.policyId,
+      claimId: claim._id,
+      action: "CLAIM_REVIEWED",
+      performedBy: req.user._id,
+    });
+
     res.json(claim);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -87,6 +95,13 @@ const approveClaim = async (req, res) => {
 
     claim.status = "APPROVED";
     await claim.save();
+
+    await AuditLog.create({
+      policyId: claim.policyId,
+      claimId: claim._id,
+      action: "CLAIM_APPROVED",
+      performedBy: req.user._id,
+    });
 
     res.json(claim);
   } catch (error) {
@@ -107,6 +122,13 @@ const rejectClaim = async (req, res) => {
     claim.status = "REJECTED";
     await claim.save();
 
+    await AuditLog.create({
+      policyId: claim.policyId,
+      claimId: claim._id,
+      action: "CLAIM_REJECTED",
+      performedBy: req.user._id,
+    });
+
     res.json(claim);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -125,6 +147,13 @@ const settleClaim = async (req, res) => {
 
     claim.status = "SETTLED";
     await claim.save();
+
+    await AuditLog.create({
+      policyId: claim.policyId,
+      claimId: claim._id,
+      action: "CLAIM_SETTLED",
+      performedBy: req.user._id,
+    });
 
     res.json(claim);
   } catch (error) {

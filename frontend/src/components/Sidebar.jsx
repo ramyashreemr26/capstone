@@ -7,7 +7,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
   Button,
   Menu,
@@ -46,6 +45,7 @@ const Sidebar = ({ children }) => {
     { label: "Policies", path: "/policies", roles: ["UNDERWRITER", "ADMIN"] },
     { label: "Claims", path: "/claims", roles: ["CLAIMS_ADJUSTER"] },
     { label: "Treaties", path: "/treaties", roles: ["REINSURANCE_MANAGER"] },
+    { label: "Allocations", path: "/allocations", roles: ["REINSURANCE_MANAGER"] },
     { label: "Users", path: "/users", roles: ["ADMIN"] },
   ];
 
@@ -65,12 +65,13 @@ const Sidebar = ({ children }) => {
             boxSizing: "border-box",
             background: "linear-gradient(180deg, #667eea 0%, #764ba2 100%)",
             color: "white",
+            borderRadius: 0,
           },
         }}
         variant="permanent"
         anchor="left"
       >
-        <Box sx={{ padding: 3, textAlign: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-start", paddingLeft: 2, height: 64, minHeight: 64 }}>
           <Typography
             variant="h6"
             sx={{
@@ -79,9 +80,6 @@ const Sidebar = ({ children }) => {
             }}
           >
             IMS
-          </Typography>
-          <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-            Insurance Management
           </Typography>
         </Box>
 
@@ -104,13 +102,6 @@ const Sidebar = ({ children }) => {
                   },
                 }}
               >
-                <ListItemIcon
-                  sx={{
-                    color: isActive(item.path) ? "white" : "rgba(255, 255, 255, 0.7)",
-                    minWidth: 40,
-                  }}
-                >
-                </ListItemIcon>
                 <ListItemText
                   primary={item.label}
                   sx={{
@@ -134,11 +125,11 @@ const Sidebar = ({ children }) => {
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            borderRadius: 0,
           }}
         >
           <Toolbar>
             <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-              Insurance Management System
             </Typography>
             <Button
               color="inherit"
@@ -148,7 +139,7 @@ const Sidebar = ({ children }) => {
                 fontSize: "0.95rem",
               }}
             >
-              {user?.email}
+              {user?.name}
             </Button>
             <Menu
               anchorEl={anchorEl}

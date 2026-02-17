@@ -19,6 +19,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tabs,
+  Tab,
+  Chip,
 } from "@mui/material";
 import api from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
@@ -30,6 +33,7 @@ const TreatyList = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
+  const [statusTab, setStatusTab] = useState(0); // 0: ACTIVE, 1: EXPIRED
   const { user } = useAuth();
 
   const [form, setForm] = useState({
@@ -108,6 +112,18 @@ const TreatyList = () => {
     }
   };
 
+  const isExpired = (treaty) => {
+    return treaty.closedAt !== null && treaty.closedAt !== undefined;
+  };
+
+  const filteredTreaties = treaties.filter((t) => {
+    if (statusTab === 0) return !isExpired(t); // ACTIVE
+    return isExpired(t); // EXPIRED
+  });
+
+  const activeTreatyCount = treaties.filter((t) => !isExpired(t)).length;
+  const expiredTreatyCount = treaties.filter((t) => isExpired(t)).length;
+
   return (
     <Box sx={{ backgroundColor: "#f5f5f5", py: 4, minHeight: "100vh" }}>
       <Container maxWidth="lg">
@@ -154,6 +170,22 @@ const TreatyList = () => {
             </Alert>
           )}
 
+          {/* Status Tabs */}
+          {!loading && treaties.length > 0 && (
+            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+              <Tabs value={statusTab} onChange={(e, newValue) => setStatusTab(newValue)}>
+                <Tab
+                  label={`Active (${activeTreatyCount})`}
+                  sx={{ fontWeight: statusTab === 0 ? 700 : 400 }}
+                />
+                <Tab
+                  label={`Expired (${expiredTreatyCount})`}
+                  sx={{ fontWeight: statusTab === 1 ? 700 : 400 }}
+                />
+              </Tabs>
+            </Box>
+          )}
+
           {loading ? (
             <Box
               sx={{
@@ -180,6 +212,12 @@ const TreatyList = () => {
                 + Create First Treaty
               </Button>
             </Paper>
+          ) : filteredTreaties.length === 0 ? (
+            <Paper sx={{ padding: 4, textAlign: "center" }}>
+              <Typography variant="h6" sx={{ color: "#666", mb: 2 }}>
+                {statusTab === 0 ? "No active treaties" : "No expired treaties"}
+              </Typography>
+            </Paper>
           ) : (
             <TableContainer component={Paper}>
               <Table>
@@ -195,16 +233,25 @@ const TreatyList = () => {
                     <TableCell sx={{ fontWeight: 700 }}>
                       Retention Limit
                     </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {treaties.map((t) => (
+                  {filteredTreaties.map((t) => (
                     <TableRow key={t._id}>
                       <TableCell>{t.treatyName}</TableCell>
                       <TableCell>{t.reinsurerName}</TableCell>
                       <TableCell>{t.sharePercentage}%</TableCell>
                       <TableCell>${(t.retentionLimit || 0).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={isExpired(t) ? "EXPIRED" : "ACTIVE"}
+                          size="small"
+                          color={isExpired(t) ? "default" : "success"}
+                          variant="outlined"
+                        />
+                      </TableCell>
                       <TableCell>
                         <Button
                           size="small"

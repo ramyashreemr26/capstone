@@ -17,4 +17,9 @@ const allocationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for faster lookups
+allocationSchema.index({ policyId: 1 });
+allocationSchema.index({ treatyId: 1 });
+allocationSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Allocation", allocationSchema);

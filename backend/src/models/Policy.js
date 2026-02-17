@@ -23,6 +23,19 @@ const policySchema = new mongoose.Schema(
             type: Number,
             required: true,
         },
+        effectiveFrom: {
+            type: Date,
+            required: true,
+        },
+        effectiveUntil: {
+            type: Date,
+            required: true,
+        },
+        duration: {
+            type: Number,
+            required: true,
+            description: "Duration in days",
+        },
         status: {
             type: String,
             enum: ["DRAFT", "PENDING_APPROVAL", "ACTIVE"],

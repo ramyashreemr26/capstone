@@ -92,7 +92,7 @@ const Login = () => {
                 mb: 1,
               }}
             >
-              Welcome Back
+              Welcome
             </Typography>
             <Typography
               variant="body2"
@@ -160,7 +160,7 @@ const Login = () => {
               variant="contained"
               size="large"
               onClick={handleLogin}
-              disabled={loading}
+              disabled={loading || !email.trim() || !password.trim()}
               sx={{
                 mt: 3,
                 mb: 2,
@@ -182,18 +182,6 @@ const Login = () => {
               )}
             </Button>
           </Box>
-
-          <Typography
-            variant="caption"
-            sx={{
-              display: "block",
-              textAlign: "center",
-              color: "#666",
-              mt: 2,
-            }}
-          >
-            Demo Credentials: admin@example.com / password123
-          </Typography>
         </Paper>
       </Container>
     </Box>

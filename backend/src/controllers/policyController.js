@@ -2,6 +2,7 @@ const Policy = require("../models/Policy");
 const AuditLog = require("../models/AuditLog");
 const Treaty = require("../models/Treaty");
 const Allocation = require("../models/Allocation");
+const mongoose = require("mongoose");
 
 // @desc Create Policy (DRAFT)
 // @route POST /api/policies
@@ -14,6 +15,9 @@ const createPolicy = async (req, res) => {
             coverageAmount,
             premium,
             retentionLimit,
+            effectiveFrom,
+            effectiveUntil,
+            duration,
         } = req.body;
 
         const policy = await Policy.create({
@@ -22,12 +26,15 @@ const createPolicy = async (req, res) => {
             coverageAmount,
             premium,
             retentionLimit,
+            effectiveFrom,
+            effectiveUntil,
+            duration,
             createdBy: req.user._id,
         });
 
         await AuditLog.create({
             policyId: policy._id,
-            action: "CREATED",
+            action: "POLICY_CREATED",
             performedBy: req.user._id,
         });
 
@@ -62,7 +69,7 @@ const submitForApproval = async (req, res) => {
 
         await AuditLog.create({
             policyId: policy._id,
-            action: "SUBMITTED",
+            action: "POLICY_SUBMITTED",
             performedBy: req.user._id,
         });
 
@@ -92,31 +99,83 @@ const approvePolicy = async (req, res) => {
             });
         }
 
+        // Update policy status to ACTIVE (no transaction needed for local MongoDB)
         policy.status = "ACTIVE";
         await policy.save();
 
         // Reinsurance Allocation Logic
-if (policy.coverageAmount > policy.retentionLimit) {
-  const treaties = await Treaty.find({ status: "ACTIVE" });
+        const cededBase = Math.max(0, policy.coverageAmount - policy.retentionLimit);
 
-  const cededBase = policy.coverageAmount - policy.retentionLimit;
+        if (cededBase > 0) {
+            const treaties = await Treaty.find({ status: "ACTIVE" });
 
-  for (let treaty of treaties) {
-    const cededAmount = (cededBase * treaty.sharePercentage) / 100;
+            if (treaties && treaties.length > 0) {
+                const totalShare = treaties.reduce((s, t) => s + (t.sharePercentage || 0), 0) || 0;
+                let allocatedCededSum = 0;
 
-    await Allocation.create({
-      policyId: policy._id,
-      treatyId: treaty._id,
-      cededAmount,
-      retainedAmount: policy.retentionLimit,
-      percentage: treaty.sharePercentage,
-    });
-  }
-}
+                for (let treaty of treaties) {
+                    const desired = totalShare > 0 ? (cededBase * (treaty.sharePercentage / totalShare)) : 0;
+                    const treatyCap = treaty.retentionLimit || 0;
+                    const actualCeded = Math.round(Math.min(desired, treatyCap) * 100) / 100;
 
+                    if (actualCeded > 0) {
+                        // Create allocation
+                        await Allocation.create({
+                            policyId: policy._id,
+                            treatyId: treaty._id,
+                            cededAmount: actualCeded,
+                            retainedAmount: 0,
+                            percentage: treaty.sharePercentage,
+                        });
+
+                        // Create audit log for allocation
+                        await AuditLog.create({
+                            policyId: policy._id,
+                            treatyId: treaty._id,
+                            action: "ALLOCATION_CREATED",
+                            performedBy: req.user._id,
+                        });
+
+                        allocatedCededSum += actualCeded;
+                    }
+                }
+
+                // Create retained allocation
+                const totalRetained = Math.round((policy.coverageAmount - allocatedCededSum) * 100) / 100;
+                await Allocation.create({
+                    policyId: policy._id,
+                    treatyId: null,
+                    cededAmount: 0,
+                    retainedAmount: totalRetained,
+                    percentage: 0,
+                });
+            } else {
+                // No treaties - all retained
+                const totalRetained = Math.round(policy.coverageAmount * 100) / 100;
+                await Allocation.create({
+                    policyId: policy._id,
+                    treatyId: null,
+                    cededAmount: 0,
+                    retainedAmount: totalRetained,
+                    percentage: 0,
+                });
+            }
+        } else {
+            // No ceded exposure - all retained
+            const totalRetained = Math.round(policy.coverageAmount * 100) / 100;
+            await Allocation.create({
+                policyId: policy._id,
+                treatyId: null,
+                cededAmount: 0,
+                retainedAmount: totalRetained,
+                percentage: 0,
+            });
+        }
+
+        // Create audit log for policy approval
         await AuditLog.create({
             policyId: policy._id,
-            action: "APPROVED",
+            action: "POLICY_APPROVED",
             performedBy: req.user._id,
         });
 
@@ -128,7 +187,7 @@ if (policy.coverageAmount > policy.retentionLimit) {
         res.status(500).json({ message: error.message });
     }
 };
-
+    
 // @desc Get Policy by ID
 // @route GET /api/policies/:id
 // @access AUTHENTICATED USERS

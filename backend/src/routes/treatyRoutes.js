@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const Treaty = require("../models/Treaty");
 const Allocation = require("../models/Allocation");
+const AuditLog = require("../models/AuditLog");
 const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
 // List Treaties
 router.get(
   "/",
   protect,
-  authorizeRoles("REINSURANCE_MANAGER"),
+  authorizeRoles("REINSURANCE_MANAGER", "ADMIN"),
   async (req, res) => {
     try {
       const treaties = await Treaty.find().sort({ createdAt: -1 });
@@ -23,7 +24,7 @@ router.get(
 router.post(
   "/",
   protect,
-  authorizeRoles("REINSURANCE_MANAGER"),
+  authorizeRoles("REINSURANCE_MANAGER", "ADMIN"),
   async (req, res) => {
     try {
       const { treatyName, reinsurerName, sharePercentage, retentionLimit } = req.body;
@@ -46,6 +47,12 @@ router.post(
         reinsurerName,
         sharePercentage,
         retentionLimit,
+      });
+
+      await AuditLog.create({
+        treatyId: treaty._id,
+        action: "TREATY_CREATED",
+        performedBy: req.user._id,
       });
 
       res.status(201).json(treaty);
@@ -90,6 +97,12 @@ router.delete(
 
       // Also remove associated allocations
       await Allocation.deleteMany({ treatyId: req.params.id });
+
+      await AuditLog.create({
+        treatyId: req.params.id,
+        action: "TREATY_DELETED",
+        performedBy: req.user._id,
+      });
 
       res.json({ message: "Treaty deleted successfully" });
     } catch (error) {

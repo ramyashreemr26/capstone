@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       enum: ["UNDERWRITER", "CLAIMS_ADJUSTER", "REINSURANCE_MANAGER", "ADMIN"],
       required: true,
     },
+    active: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
